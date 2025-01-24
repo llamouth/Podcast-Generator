@@ -4,21 +4,25 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(GOOGLE_API);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+const formatPodcastResponse = (response) => {
+    // Split the response by newlines and remove empty lines or excess whitespace
+    return response.split("\n").map(line => line.trim()).filter(line => line !== ""); 
+};
+
+
 const getGeminiTextResponse = async (promptObj) => {
-    let { prompt, numOfCommentators, length} = promptObj
+    let { topic, numOfCommentators, length} = promptObj
 
-    prompt += `, Please structure the response as a podcast episode with an introduction, main content, and conclusion. This episode should be ${length} minutes long and should include the following amount of commentators ${numOfCommentators}.`;
+    const newPrompt = `Please structure a podcast episode for the topic "${topic}". The episode should be  NO LONGER THAN ${length} minutes long and involve ${numOfCommentators} commentators. The structure should include:
+    - **Introduction**: Provide a brief overview of the topic and introduce the commentators.
+    - **Main Content**: Dive into key points, discussions, or debates related to the topic.
+    - **Conclusion**: Summarize the episode, key takeaways, and any closing remarks.
 
-    const result = await model.generateContentStream(prompt);
+    Keep the discussion focused ENTIRELY on "${topic}".`;
 
-    const chunkArr = []
-    for await (const chunk of result.stream) {
-        console.log(result.stream)
-        const chunkText = chunk.text();
-        chunkArr.push(chunkText)
-    }
+    const result = await model.generateContent(newPrompt);
 
-    return chunkArr;
+    return formatPodcastResponse(result.response.text());
 };
 
 module.exports = { getGeminiTextResponse };

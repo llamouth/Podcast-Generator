@@ -11,14 +11,15 @@ const formatPodcastResponse = (response) => {
 
 
 const getGeminiTextResponse = async (promptObj) => {
-    let { topic, numOfCommentators, length} = promptObj
 
-    const newPrompt = `Please structure a podcast episode for the topic "${topic}". The episode should be  NO LONGER THAN ${length} minutes long and involve ${numOfCommentators} commentators. The structure should include:
-    - **Introduction**: Provide a brief overview of the topic and introduce the commentators.
-    - **Main Content**: Dive into key points, discussions, or debates related to the topic.
+    let { title, commentators, length, description} = promptObj
+
+    const newPrompt = `Please structure a podcast episode for the topic "${title}" with the description "${description}". The episode should be NO LONGER THAN ${length} minutes long and involve ${commentators} commentators. Briefly outline the commentators’ backgrounds or expertise if applicable. The structure should include:
+    - **Introduction**: Provide a brief overview of the topic and introduce the commentators, including their names and roles.
+    - **Main Content**: Dive into key points, discussions, or debates related to the topic. Each commentator should have a chance to share their perspective or insights.
     - **Conclusion**: Summarize the episode, key takeaways, and any closing remarks.
-
-    Keep the discussion focused ENTIRELY on "${topic}".`;
+    
+    Keep the discussion focused ENTIRELY on "${title}".`;
 
     const result = await model.generateContent(newPrompt);
 

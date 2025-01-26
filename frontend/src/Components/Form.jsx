@@ -35,7 +35,7 @@ const Form = ({ setLoading, setResponseData }) => {
                     body: JSON.stringify(values),
                 });
                 const data = await response.json();
-                setResponseData(JSON.stringify(data, null, 2));
+                setResponseData(data); // Ensure data is an array of strings
             } catch (error) {
                 console.error('Error:', error);
             } finally {

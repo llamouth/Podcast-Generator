@@ -4,11 +4,15 @@ const { getTextToSpeechAudio } = require('../queries/elevenLabs.query');
 
 elevenLabs.post('/', async (req, res) => {
     try {
-        const { responseData } = req.body;
-        const audio = await getTextToSpeechAudio(responseData);
-        res.status(200).send({ audio });
+        const audioUrl = await getTextToSpeechAudio(req.body);
+        if (audioUrl) {
+            return res.status(200).json({ audioUrl }); // Send the audio URL back to the frontend
+        } else {
+            return res.status(500).json({ error: 'Failed to generate audio' });
+        }
     } catch (error) {
-        res.status(500).send({ message: error.message });
+        console.error(error)
+        res.status(500).json({ error: error });
     }
 })
 

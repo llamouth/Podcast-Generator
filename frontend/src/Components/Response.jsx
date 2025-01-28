@@ -1,53 +1,49 @@
 import React, { useState } from "react";
-import { ElevenLabsClient, play } from "elevenlabs";
 
 const ResponseWithTTS = ({ responseData }) => {
     const [loading, setLoading] = useState(false);
     const [audio, setAudio] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const API = import.meta.env.VITE_BASE_API_URL; 
 
+    // Function to handle playing the TTS response
     const playResponse = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Replace with the voice ID you're using
-            const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
 
-            const combinedText = [
-                ...responseData.introduction,
-                ...responseData.mainContent,
-                ...responseData.conclusion,
-            ].join(" ");
-            
-            const response = await fetch(url, {
+            const response = await fetch(`${API}/elevenlab`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "xi-api-key": import.meta.env.VITE_ELEVENLABS_API_KEY, // API Key from environment variables
                 },
-                body: JSON.stringify({
-                    text: combinedText, // Replace with dynamic text
-                    model_id: "eleven_multilingual_v2", // Replace with the correct model ID if needed
-                    output_format: "mp3_44100_128",
-                }),
+                body: JSON.stringify(responseData),
             });
-        
+
             if (!response.ok) {
-                throw new Error(`API request failed with status: ${response.status}`);
+                throw new Error('Failed to fetch audio');
             }
-        
-            const audioBlob = await response.blob(); // Retrieve the audio as a Blob
-            const audioUrl = URL.createObjectURL(audioBlob); // Convert Blob to URL for playback
-            const newAudio = new Audio(audioUrl); // Create an audio object
-            setAudio(newAudio); // Set the audio object in state
-            newAudio.play(); // Play the audio
-            setIsPlaying(true); // Set playing state to true
+
+            const data = await response.json();  // The backend should return the audio URL
+            console.log(data);
+            const audioUrl = data.audioUrl;
+
+            if (audioUrl) {
+                // Create a new Audio object and play it
+                const newAudio = new Audio(audioUrl);
+                setAudio(newAudio);
+                newAudio.play();
+                setIsPlaying(true);
+            } else {
+                console.error("Failed to fetch audio.");
+            }
         } catch (error) {
-            console.error("Error playing response:", error);
+            console.error("Error in playResponse:", error);
         } finally {
             setLoading(false);
         }
     };
 
+    // Function to toggle play/pause for the audio
     const togglePlayPause = () => {
         if (audio) {
             if (isPlaying) {
@@ -59,6 +55,7 @@ const ResponseWithTTS = ({ responseData }) => {
         }
     };
 
+    // Function to format text with Markdown-like syntax
     const formatText = (text) => {
         let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
         formattedText = formattedText.replace(/\*(.*?)\*/g, "<i>$1</i>");
@@ -68,25 +65,21 @@ const ResponseWithTTS = ({ responseData }) => {
     return (
         <div className="w-full max-w-full overflow-y-auto">
             <div>
-
                 <pre
                     dangerouslySetInnerHTML={{
                         __html: responseData.introduction.map(formatText).join("<br/>"),
                     }}
                 />
-
                 <pre
                     dangerouslySetInnerHTML={{
                         __html: responseData.mainContent.map(formatText).join("<br/>"),
                     }}
                 />
-
                 <pre
                     dangerouslySetInnerHTML={{
                         __html: responseData.conclusion.map(formatText).join("<br/>"),
                     }}
                 />
-
                 <button
                     className="bg-blue-500 text-white p-2 mt-4 rounded"
                     onClick={audio ? togglePlayPause : playResponse}

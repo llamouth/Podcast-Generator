@@ -1,8 +1,32 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 const Form = ({ setLoading, setResponseData }) => {
+
+    let section = 'introduction';
+
+    const parsePodcastScript = (script) => {
+        const sections = {
+          introduction: [],
+          mainContent: [],
+          conclusion: [],
+        };
+    
+        script.forEach((line) => {
+
+          if (line.includes("Main Content")) {
+            section = 'mainContent';
+          } else if (line.includes("Conclusion")) {
+            section = 'conclusion';
+          }
+          
+          sections[section].push(line);
+
+        });
+    
+        return sections;
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -35,7 +59,8 @@ const Form = ({ setLoading, setResponseData }) => {
                     body: JSON.stringify(values),
                 });
                 const data = await response.json();
-                setResponseData(data); // Ensure data is an array of strings
+                const paresedScript = parsePodcastScript(data);
+                setResponseData(paresedScript); // Ensure data is an array of strings
             } catch (error) {
                 console.error('Error:', error);
             } finally {
@@ -43,6 +68,8 @@ const Form = ({ setLoading, setResponseData }) => {
             }
         },
     });
+
+    
 
     return (
         <form onSubmit={formik.handleSubmit} className="w-full max-w-full mx-auto p-2 bg-white shadow-md rounded flex flex-wrap">

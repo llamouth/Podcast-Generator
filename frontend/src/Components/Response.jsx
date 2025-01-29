@@ -10,7 +10,6 @@ const ResponseWithTTS = ({ responseData }) => {
     const playResponse = async () => {
         setLoading(true);
         try {
-
             const response = await fetch(`${API}/elevenlab`, {
                 method: "POST",
                 headers: {
@@ -20,22 +19,17 @@ const ResponseWithTTS = ({ responseData }) => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch audio');
+                throw new Error('Failed to generate audio');
             }
 
-            const data = await response.json();  // The backend should return the audio URL
-            console.log(data);
-            const audioUrl = data.audioUrl;
+            const audioBlob = await response.blob(); // Await the blob conversion
+            const audioUrl = URL.createObjectURL(audioBlob); // Create a URL for the Blob
 
-            if (audioUrl) {
-                // Create a new Audio object and play it
-                const newAudio = new Audio(audioUrl);
-                setAudio(newAudio);
-                newAudio.play();
-                setIsPlaying(true);
-            } else {
-                console.error("Failed to fetch audio.");
-            }
+            const newAudio = new Audio(audioUrl);
+            await newAudio.play(); // Play audio immediately or await it
+
+            setAudio(newAudio); // Set the new audio object
+            setIsPlaying(true); // Set playing state to true
         } catch (error) {
             console.error("Error in playResponse:", error);
         } finally {
@@ -49,9 +43,11 @@ const ResponseWithTTS = ({ responseData }) => {
             if (isPlaying) {
                 audio.pause();
             } else {
-                audio.play();
+                audio.play().catch((err) => {
+                    console.error('Error while trying to play the audio:', err);
+                });
             }
-            setIsPlaying(!isPlaying);
+            setIsPlaying(!isPlaying); // Toggle the playing state
         }
     };
 

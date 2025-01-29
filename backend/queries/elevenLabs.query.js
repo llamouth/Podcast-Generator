@@ -1,49 +1,32 @@
-require("dotenv").config()
+require("dotenv").config();
+const { ElevenLabsClient } = require('elevenlabs');
+
+const client = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
 
 const getTextToSpeechAudio = async (responseObject) => {
     try {
-        const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Replace with the voice ID you're using
-        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+        const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Your specific voice ID
 
-        // Combine all parts of the response text
+        // Combine the text from the responseObject
         const combinedText = [
             ...responseObject?.introduction,
             ...responseObject?.mainContent,
             ...responseObject?.conclusion,
         ].join(" ");
 
-        // Make the POST request to the Eleven Labs API
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "xi-api-key": process.env.ELEVENLABS_API_KEY, // Ensure this is set correctly in your environment
-            },
-            body: JSON.stringify({
-                text: combinedText, // The dynamic text to convert to speech
-                model_id: "eleven_multilingual_v2", // Replace with the correct model ID if needed
-                output_format: "mp3_44100_128", // Audio format settings
-            }),
+       
+        // Call the Eleven Labs API to generate the audio
+        const audioResponse = await client.generate({
+            voiceId: voiceId,
+            text: combinedText,
+            modelId: 'eleven_multilingual_v2', // Or your specific model ID
+            outputFormat: 'mp3' // Specify the desired output format
         });
-
-        console.log(response);
-
-        // Check if the response is successful
-        if (!response.ok) {
-            throw new Error(`API request failed with status: ${response.status}`);
-        }
-
-        // Retrieve the audio data as a Blob
-        const audioBlob = await response.blob();
-        
-        // Create an audio URL for the Blob
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        // Return the audio URL instead of the Blob for easier use in the calling function
-        return audioUrl;
+ 
+        return audioResponse; // The response should contain the audio data in the specified format
     } catch (error) {
         console.error("Error getting TTS audio:", error);
-        return null; // Returning null in case of error for better handling downstream
+        throw error; // Propagate the error for the controller to handle
     }
 }
 

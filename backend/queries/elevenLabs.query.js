@@ -1,35 +1,46 @@
 require("dotenv").config();
-const { ElevenLabsClient } = require('elevenlabs');
-
-const client = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
+const fetch = require("node-fetch"); // Ensure this is installed if using CommonJS
 
 const getTextToSpeechAudio = async (responseObject) => {
     try {
-        const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Your specific voice ID
+        const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Ensure this is your actual ElevenLabs voice ID
 
-        // Combine the text from the responseObject
+        // Combine all text into one string
         const combinedText = [
-            ...responseObject?.introduction,
-            ...responseObject?.mainContent,
-            ...responseObject?.conclusion,
+            ...responseObject?.introduction || [],
+            ...responseObject?.mainContent || [],
+            ...responseObject?.conclusion || [],
         ].join(" ");
 
-       
-        // Call the Eleven Labs API to generate the audio
-        const audioResponse = await client.generate({
-            voiceId: voiceId,
-            text: combinedText,
-            modelId: 'eleven_multilingual_v2', // Or your specific model ID
-            outputFormat: 'mp3' // Specify the desired output format
+        console.log("Requesting audio for text:", combinedText); // Debugging log
+
+        // API request to ElevenLabs
+        const audioResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "xi-api-key": process.env.ELEVENLABS_API_KEY, // Ensure this is set correctly
+            },
+            body: JSON.stringify({
+                text: combinedText,
+                model_id: "eleven_multilingual_v2", // Correct field name
+                output_format: "mp3", // Correct field name
+            }),
         });
- 
-        return audioResponse; // The response should contain the audio data in the specified format
+
+        if (!audioResponse.ok) {
+            const errorDetails = await audioResponse.json();
+            console.error("ElevenLabs API Error:", errorDetails);
+            throw new Error(`API Error: ${audioResponse.status} - ${errorDetails.message}`);
+        }
+
+        return await audioResponse.arrayBuffer(); // Return raw binary audio data
     } catch (error) {
         console.error("Error getting TTS audio:", error);
-        throw error; // Propagate the error for the controller to handle
+        throw error;
     }
-}
+};
 
 module.exports = {
-    getTextToSpeechAudio
-}
+    getTextToSpeechAudio,
+};

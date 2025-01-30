@@ -9,7 +9,6 @@ const Container = () => {
     const [utterance, setUtterance] = useState(null);
 
     const playResponse = () => {
-        setLoading(true);
         const combinedText = [
             ...responseData.introduction,
             ...responseData.mainContent,
@@ -29,7 +28,6 @@ const Container = () => {
         window.speechSynthesis.speak(newUtterance);
         setUtterance(newUtterance);
         setIsPlaying(true);
-        setLoading(false);
     };
 
     const togglePlayPause = () => {
@@ -51,6 +49,14 @@ const Container = () => {
         }
     };
 
+    const stopCurrentAudio = () => {
+        if (utterance) {
+            window.speechSynthesis.cancel();
+            setIsPlaying(false);
+            setUtterance(null); // Reset the utterance state
+        }
+    };
+
     return (
         <div className='container mx-auto p-6 bg-gray-100 rounded-lg shadow-lg flex flex-col items-center max-h-screen h-screen overflow-auto overflow-x-hidden'>
             <h1 className='text-3xl font-bold mb-4 text-center text-gray-800'>Cast-A-Pod</h1>
@@ -60,7 +66,7 @@ const Container = () => {
                 <>
                     <p className='text-lg mb-6 text-center text-gray-700'>Welcome to Cast-A-Pod! This is a podcast episode generator that uses Google's Gemini AI to generate podcast scripts based on your topic and preferences. Simply fill out the form below and click "Generate" to get started!</p>
                     <div className='w-full'>
-                        <Form setLoading={setLoading} setResponseData={setResponseData}/>
+                        <Form setLoading={setLoading} setResponseData={setResponseData} stopCurrentAudio={stopCurrentAudio}/>
                     </div>
                     {responseData?.introduction &&
                         <div className='w-full whitespace-pre-wrap break-words mt-6 max-h-10'>

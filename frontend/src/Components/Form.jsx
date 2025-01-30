@@ -2,11 +2,12 @@ import React, {useState} from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-const Form = ({ setLoading, setResponseData }) => {
+const Form = ({ setLoading, setResponseData, stopCurrentAudio }) => {
 
-    let section = 'introduction';
-
+    
     const parsePodcastScript = (script) => {
+        let section = 'introduction';
+        
         const sections = {
           introduction: [],
           mainContent: [],
@@ -51,6 +52,7 @@ const Form = ({ setLoading, setResponseData }) => {
         onSubmit: async values => {
             setLoading(true);
             setResponseData({}); // Clear previous response data
+            stopCurrentAudio(); // Stop current audio and reset utterance state
             try {
                 const response = await fetch('http://localhost:3333/gemini', {
                     method: 'POST',

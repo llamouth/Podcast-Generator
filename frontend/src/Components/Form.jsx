@@ -34,7 +34,7 @@ const Form = ({ setLoading, setResponseData, stopCurrentAudio }) => {
             title: '',
             description: '',
             commentators: 1,
-            length: 10, 
+            length: 5, 
         },
         validationSchema: Yup.object({
             title: Yup.string()
@@ -63,7 +63,7 @@ const Form = ({ setLoading, setResponseData, stopCurrentAudio }) => {
                 });
                 const data = await response.json();
                 const paresedScript = parsePodcastScript(data);
-                setResponseData(paresedScript); // Ensure data is an array of strings
+                setResponseData(paresedScript); 
             } catch (error) {
                 console.error('Error:', error);
             } finally {
